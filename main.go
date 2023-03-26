@@ -3,21 +3,26 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"reflect"
+	"runtime"
 )
 
-func index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Index page")
+func name(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Timofey")
 }
 
-func about(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "About page")
+func log(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := runtime.FuncForPC(reflect.ValueOf(h).Pointer()).Name()
+		fmt.Println("Handler function called - " + name)
+		h(w, r)
+	}
 }
 
 func main() {
 	server := http.Server{
 		Addr: "127.0.0.1:8080",
 	}
-	http.HandleFunc("/", index)
-	http.HandleFunc("/about", about)
+	http.HandleFunc("/name", log(name))
 	server.ListenAndServe()
 }
